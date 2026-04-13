@@ -13,21 +13,18 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # 1. Setup PHP & Install Library Backend (Laravel)
+      # 1. Setup PHP
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.2' # Sesuaikan dengan versi Laravel 12
+          php-version: '8.2'
           tools: composer
 
-      - name: Install Composer Dependencies
-        run: composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev
-
-      # 2. Setup Node.js & Install Library Frontend (Vite/Tailwind)
+      # 2. Setup Node.js & Build Frontend
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '20' # Menggunakan Node 20 agar Vite tidak error
+          node-version: '20'
           cache: 'npm'
 
       - name: Install NPM & Build
@@ -35,21 +32,24 @@ jobs:
           npm install
           npm run build
 
-# 3. Upload ke Hosting via FTP
-      - name: Deploy via FTP to HostData
+      # 3. Bungkus Project menjadi 1 file ZIP (Kecuali file yang tidak perlu)
+      - name: Create ZIP file
+        run: |
+          zip -r deploy.zip . -x "*.git*" "*node_modules*" "*vendor*" ".env.example" "README.md" "tests/*"
+
+      # 4. Pindahkan ZIP ke folder khusus untuk diupload
+      - name: Prepare Upload Folder
+        run: |
+          mkdir upload_ready
+          mv deploy.zip upload_ready/
+
+      # 5. Upload HANYA file deploy.zip ke Server
+      - name: Deploy ZIP via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          local-dir: ./
+          local-dir: ./upload_ready/
           server-dir: /
           dangerous-clean-slate: false
-          exclude: |
-            **/.git*
-            **/.git*/**
-            **/node_modules/**
-            **/vendor/**
-            .env.example
-            README.md
-            tests/**
