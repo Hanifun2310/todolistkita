@@ -35,24 +35,21 @@ jobs:
           npm install
           npm run build
 
-      # 3. Upload ke Hosting via FTP
+# 3. Upload ke Hosting via FTP
       - name: Deploy via FTP to HostData
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          # Upload seluruh folder root project
           local-dir: ./
-          # Biarkan ini / (atau sesuaikan jika FTP Anda diarahkan ke folder spesifik)
           server-dir: /
-          # Mencegah penghapusan file penting di server (seperti .env)
           dangerous-clean-slate: false
-          # Mengecualikan folder mentah agar proses upload tidak lama
           exclude: |
             **/.git*
             **/.git*/**
             **/node_modules/**
+            **/vendor/**
             .env.example
             README.md
             tests/**
